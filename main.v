@@ -13,7 +13,7 @@ fn main() {
 	fp.skip_executable()
 
 	debug_mode := fp.bool("debug", `d`, false, "Enable debug mode")
-	target_doc_path := fp.string_opt("target", `t`, "Document to process all include statements") or { '' }
+	target_doc_path := fp.string("target", `t`, "", "Document to process all include statements")
 
 	fp.finalize() or {} // handles builtin arguments (--help, -h, or --version)
 						// but will ignore any undefined arguments passed in
