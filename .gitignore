@@ -1,0 +1,11 @@
+# Binaries for programs and plugins
+imdclude
+!imdclude/
+main.dSYM/
+main
+*.exe
+*.exe~
+*.so
+*.dylib
+*.dll
+vls.log
