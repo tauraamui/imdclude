@@ -2,7 +2,7 @@ module imdclude
 
 import v.vmod
 
-const manifest = vmod.from_file("v.mod") or { panic(err) }
+const manifest = vmod.from_file('v.mod') or { panic(err) }
 
 pub const (
 	version     = manifest.version

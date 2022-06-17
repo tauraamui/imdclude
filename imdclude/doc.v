@@ -39,14 +39,14 @@ pub fn (d Document) output_content_and_includes_nested_too() {
 pub fn (d Document) output_content() {
 	println("DOC $d.name's content:")
 
-	max_line_index_len := d.content.len.str().split("").len
+	max_line_index_len := d.content.len.str().split('').len
 	for i, line in d.content {
-		line_index_len := i.str().split("").len
-		mut padding_prefix := " "
+		line_index_len := i.str().split('').len
+		mut padding_prefix := ' '
 		for li := line_index_len; li < max_line_index_len; li++ {
-			padding_prefix += " "
+			padding_prefix += ' '
 		}
-		println("[$i](${padding_prefix})$line")
+		println('[$i]($padding_prefix)$line')
 	}
 }
 
@@ -59,16 +59,18 @@ pub fn (d Document) output_content_nested_too() {
 
 pub fn (d Document) output_includes() {
 	if d.included_docs.len == 0 {
-		println("DOC $d.name HAS NO INCLUDES")
+		println('DOC $d.name HAS NO INCLUDES')
 		return
 	}
 
 	mut list_str_header := "DOC $d.name's INCLUDES: ["
 	for i, incl in d.included_docs {
-		list_str_header = "$list_str_header\n\t$incl.name on line ${i+1}"
-		if i + 1 < d.included_docs.len { list_str_header += "," }
+		list_str_header = '$list_str_header\n\t$incl.name on line ${i + 1}'
+		if i + 1 < d.included_docs.len {
+			list_str_header += ','
+		}
 	}
-	list_str_header += "\n]"
+	list_str_header += '\n]'
 	println(list_str_header)
 }
 
@@ -95,9 +97,21 @@ pub fn (mut d Document) resolve_includes_to_content() {
 		mut resolved_content := []string{}
 		resolved_content.insert(resolved_content.len, d.content[..adjusted_line_pos])
 		resolved_content.insert(resolved_content.len, incl.content)
-		resolved_content.insert(resolved_content.len, d.content[safe_slice_high_index(adjusted_line_pos, d.content.len)..])
+		resolved_content.insert(resolved_content.len, d.content[safe_slice_high_index(adjusted_line_pos,
+			d.content.len)..])
 		d.content = resolved_content
 		line_pos_offset += incl.content.len
+	}
+}
+
+pub fn (mut d Document) write_content_to_disk(mut log log.Logger) ? {
+	log.debug("attempting to write content to '$d.abs_path'")
+	os.truncate(d.abs_path, 0) or {
+		return error("unable to wipe '$d.abs_path' file content: $err")
+	}
+
+	os.write_file(d.abs_path, d.content.join_lines()) or {
+		return error("unable to write '$d.abs_path' file content: $err")
 	}
 }
 
@@ -123,35 +137,35 @@ fn (mut d Document) read_content(mut log log.Logger) ? {
 }
 
 fn (mut d Document) find_includes_within_content(mut log log.Logger) ? {
-	log.debug("searching within $d.abs_path file content lines for includes...")
+	log.debug('searching within $d.abs_path file content lines for includes...')
 
 	for i, cl in d.content {
 		mut cl_copy := cl
 		cl_copy = cl.trim_space()
 		if cl_copy.len == 0 {
-			log.debug("skipping $i (blank line)")
+			log.debug('skipping $i (blank line)')
 			continue
 		}
 
-		mut proclogline := "processing line #$i -> $cl_copy"
-		if cl_copy.starts_with("#include") {
-			proclogline = "$proclogline [FOUND INCLUDE]"
+		mut proclogline := 'processing line #$i -> $cl_copy'
+		if cl_copy.starts_with('#include') {
+			proclogline = '$proclogline [FOUND INCLUDE]'
 
-			cl_copy = cl_copy.replace("#include", "")
+			cl_copy = cl_copy.replace('#include', '')
 			line_parts := cl_copy.fields() // extract remaining whitespace delim'd line content into list
 			if line_parts.len != 1 {
 				log.debug(proclogline)
-				log.error("include line does not match expected pattern: #include filename.md\\n")
+				log.error('include line does not match expected pattern: #include filename.md\\n')
 				continue
 			}
 
 			doc_abs_path := d.convert_include_stmt_to_abs_path_rel_to_parent(line_parts[0])
-			proclogline = "$proclogline (${doc_abs_path})"
+			proclogline = '$proclogline ($doc_abs_path)'
 			log.debug(proclogline)
 
 			d.included_docs[i] = new_document(doc_abs_path)
 		} else {
-			log.debug("$proclogline [NO INCLUDE]")
+			log.debug('$proclogline [NO INCLUDE]')
 		}
 	}
 }
@@ -161,5 +175,5 @@ fn (d Document) convert_include_stmt_to_abs_path_rel_to_parent(statement string)
 		return statement
 	}
 
-	return os.join_path(d.abs_path.replace(d.name, ""), statement)
+	return os.join_path(d.abs_path.replace(d.name, ''), statement)
 }

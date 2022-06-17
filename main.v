@@ -12,11 +12,11 @@ fn main() {
 	fp.description(imdclude.description)
 	fp.skip_executable()
 
-	debug_mode := fp.bool("debug", `d`, false, "Enable debug mode")
-	target_doc_path := fp.string("target", `t`, "", "Document to process all include statements")
+	debug_mode := fp.bool('debug', `d`, false, 'Enable debug mode')
+	target_doc_path := fp.string('target', `t`, '', 'Document to process all include statements')
 
 	fp.finalize() or {} // handles builtin arguments (--help, -h, or --version)
-						// but will ignore any undefined arguments passed in
+	// but will ignore any undefined arguments passed in
 
 	if target_doc_path.len == 0 {
 		eprintln("ERROR: parameter 'target' not provided")
@@ -30,10 +30,13 @@ fn main() {
 
 	mut target_doc := imdclude.new_document(target_doc_path)
 	target_doc.resolve_includes(mut &logg) or {
-		eprintln("ERROR: $err")
+		eprintln('ERROR: $err')
 		exit(1)
 	}
 	target_doc.resolve_includes_to_content()
 
-	target_doc.output_content()
+	target_doc.write_content_to_disk(mut &logg) or {
+		eprintln('ERROR: $err')
+		exit(1)
+	}
 }
