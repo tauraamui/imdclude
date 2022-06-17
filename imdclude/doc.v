@@ -115,6 +115,17 @@ pub fn (mut d Document) write_content_to_disk(mut log log.Logger) ? {
 	}
 }
 
+pub fn (mut d Document) read_content(mut log log.Logger) ? {
+	if d.content.len != 0 {
+		return
+	}
+
+	log.debug("attempting to read content from '$d.abs_path'")
+	d.content = os.read_lines(d.abs_path) or {
+		return error("unable read '$d.abs_path' file content: $err")
+	}
+}
+
 fn safe_slice_high_index(i int, len int) int {
 	if len > 0 && i != len {
 		return i + 1
@@ -126,13 +137,6 @@ fn safe_slice_high_index(i int, len int) int {
 fn (mut d Document) resolve_includes_includes(mut log log.Logger) ? {
 	for _, mut incl in d.included_docs {
 		incl.resolve_includes(mut log) or { return err }
-	}
-}
-
-fn (mut d Document) read_content(mut log log.Logger) ? {
-	log.debug("attempting to read content from '$d.abs_path'")
-	d.content = os.read_lines(d.abs_path) or {
-		return error("unable read '$d.abs_path' file content: $err")
 	}
 }
 

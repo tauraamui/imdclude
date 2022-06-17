@@ -14,6 +14,8 @@ fn main() {
 
 	debug_mode := fp.bool('debug', `d`, false, 'Enable debug mode')
 	target_doc_path := fp.string('target', `t`, '', 'Document to process all include statements')
+	write_to_stdout := fp.bool('console', `c`, false, 'Write content to console instead of target document')
+	backup_doc := fp.bool('backup', `b`, false, 'Backup document before processing')
 
 	fp.finalize() or {} // handles builtin arguments (--help, -h, or --version)
 	// but will ignore any undefined arguments passed in
@@ -29,11 +31,28 @@ fn main() {
 	}
 
 	mut target_doc := imdclude.new_document(target_doc_path)
+	target_doc.read_content(mut &logg) or {
+		eprintln('ERROR: $err')
+		exit(1)
+	}
+
+	if backup_doc {
+		imdclude.backup_document(target_doc) or {
+			eprintln('ERROR: $err')
+			exit(1)
+		}
+	}
+
 	target_doc.resolve_includes(mut &logg) or {
 		eprintln('ERROR: $err')
 		exit(1)
 	}
 	target_doc.resolve_includes_to_content()
+
+	if write_to_stdout {
+		target_doc.output_content()
+		exit(0)
+	}
 
 	target_doc.write_content_to_disk(mut &logg) or {
 		eprintln('ERROR: $err')
